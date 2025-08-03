@@ -1,0 +1,279 @@
+{
+  "name": "My workflow 7",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        -1984,
+        48
+      ],
+      "id": "883076b3-9c45-4775-979f-c551482ad142",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "functionCode": "const keywords = [\"python\", \"web development\", \"data science\"];\n\nreturn keywords.map(k => ({\n  json: {\n    keyword: k,\n    url: `https://internshala.com/internships/keywords-${encodeURIComponent(k)}/`\n  }\n}));"
+      },
+      "name": "Generate URLs",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        -1792,
+        48
+      ],
+      "id": "9f9f073b-8c7c-4216-ae72-61348561a5d5",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{$json.url}}",
+        "options": {}
+      },
+      "name": "Fetch Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -1584,
+        48
+      ],
+      "id": "c49fe6db-5084-4c92-8134-1882d64eb43a",
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        -1392,
+        48
+      ],
+      "id": "dd14b799-1560-4594-b529-f9c31082e601",
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(item => ({\n  json: {\n    body: item.json.body,\n    keyword: item.json.keyword\n  }\n}));"
+      },
+      "name": "Prepare for HTML Extraction",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        -1184,
+        48
+      ],
+      "id": "e5933d56-0b0c-4979-8256-68a55bab3ce5",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Extract Listings (HTML)",
+      "type": "n8n-nodes-base.htmlExtract",
+      "position": [
+        -992,
+        48
+      ],
+      "id": "37fd32dc-972a-4477-bcd6-c0e8d88bf68e",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Set Full Link",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -736,
+        48
+      ],
+      "id": "5c7685c0-3369-474c-b645-0f9da33702a6",
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.title}}",
+              "operation": "contains",
+              "value2": "={{$json.keyword}}",
+              "caseSensitive": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Filter by Keyword",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -496,
+        48
+      ],
+      "id": "32bbe16f-f37f-4421-b89d-9a11ec3e3871",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "⭐ *New Internship Alert*\n\n*Keyword:* {{$json.keyword}}\n*Title:* {{$json.title}}\n*Company:* {{$json.company}}\n*Location:* {{$json.location}}\n*Link:* {{$json.link}}",
+        "additionalFields": {}
+      },
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "64ce6647-23e6-4b43-a830-f1667bbe925a",
+      "typeVersion": 1.2,
+      "webhookId": "8cdfc01e-feb4-488e-bdd0-0a0aacadd923",
+      "credentials": {
+        "telegramApi": {
+          "id": "c8lvwCiuGFOQnViB",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+        "sheetName": "Sheet1",
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -240,
+        96
+      ],
+      "id": "cc37f8a6-8c68-4179-a256-84db91194fb9",
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "piacNKPYMAJr9322",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate URLs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Page": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Prepare for HTML Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare for HTML Extraction": {
+      "main": [
+        [
+          {
+            "node": "Extract Listings (HTML)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Listings (HTML)": {
+      "main": [
+        [
+          {
+            "node": "Set Full Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Full Link": {
+      "main": [
+        [
+          {
+            "node": "Filter by Keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Keyword": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "958e66fe-4509-4047-b7b7-c6e714d7caae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc8bcf267a84b23ae977fce654b8a5e0500bc08aa40a43457a3016773be95fc7"
+  },
+  "id": "TJYC1Ndl5xlKCo4i",
+  "tags": []
+}
